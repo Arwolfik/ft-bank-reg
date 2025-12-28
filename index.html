@@ -7,19 +7,67 @@
 
   <link rel="stylesheet" href="./style.css" />
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" />
+
 
   <!-- РОВНОЕ ВЫРАВНИВАНИЕ ТЕКСТА ВЕЗДЕ -->
+  
   <style>
-    body, form, label, input, select, textarea, button, .hint, .policy-text, .text-block, p, h2 {
+    /* ВАЖНО: постоянное ровное выравнивание текста */
+    body, form, label, input, select, textarea, button,
+    .hint, .policy-text, .text-block, .file-info {
       text-align: left !important;
     }
-    /* Описания треков: сохраняем переносы строк */
-    .hint, .policy-text, #priority1_description, #priority2_description {
+
+    /* Убираем “плавающие” отступы и налезания */
+    label {
+      display: block;
+      margin: 0 0 8px 0 !important;
+      line-height: 1.25 !important;
+    }
+
+    input, select, textarea {
+      margin: 0 0 18px 0 !important;
+      line-height: 1.25 !important;
+    }
+
+    /* Старое правило могло “съедать” отступ и вызывать налезание */
+    #phone { margin-bottom: 18px !important; }
+
+    /* Описания/подсказки: не в белом “окошке”, а как обычный текст */
+    .hint,
+    .policy-text {
+      background: transparent !important;
+      border: none !important;
+      padding: 0 !important;
+      margin: 6px 0 14px 0 !important;
+      border-radius: 0 !important;
+      color: rgba(26,26,26,0.70) !important;
       white-space: pre-line !important;
     }
-    /* Чтобы label и поля стояли ровно */
-    label { line-height: 1.25; }
+
+    .policy-link { display: inline-block; margin: 8px 0 6px 0; }
+
+    /* Описание выбранного трека/приоритета */
+    #track_description, #priority1_description, #priority2_description {
+      white-space: pre-line !important;
+    }
+
+    /* Улучшаем внешний вид input[type=date] (насколько позволяет браузер) */
+    input[type="date"]{
+      appearance: none;
+      -webkit-appearance: none;
+      background-color: #fff !important;
+    }
+
+    /* Чуть приятнее подсветка фокуса для date */
+    input[type="date"]:focus{
+      outline: none;
+      border-color: var(--color-accent) !important;
+      box-shadow: 0 0 0 3px rgba(255, 231, 0, 0.35) !important;
+    }
   </style>
+
 </head>
 
 <body>
