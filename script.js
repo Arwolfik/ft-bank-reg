@@ -725,47 +725,48 @@ function resetSelect(select, placeholder) {
   select.appendChild(opt);
 }
 
+
 function fillPrioritySelects(directionType) {
   // directionType: "IT" | "Бизнес"
   const source = directionType === "IT" ? IT_DIRECTIONS : NON_IT_DIRECTIONS;
 
+  // Вместо <optgroup> (которые в моб. селектах выглядят “серым” и путают)
+  // делаем плоский список: "Направление — Трек"
   resetSelect(priority1, "— Выберите —");
   resetSelect(priority2, "— Выберите —");
 
-  // Оптгруппы: направление -> треки
+  const flat = [];
   source.forEach((dir) => {
-    const og1 = document.createElement("optgroup");
-    og1.label = dir.name;
-
-    const og2 = document.createElement("optgroup");
-    og2.label = dir.name;
-
-    dir.tracks.forEach((t) => {
-      const o1 = document.createElement("option");
-      o1.value = t.value;
-      o1.textContent = t.label;
-      o1.dataset.description = t.description || "";
-      og1.appendChild(o1);
-
-      const o2 = document.createElement("option");
-      o2.value = t.value;
-      o2.textContent = t.label;
-      o2.dataset.description = t.description || "";
-      og2.appendChild(o2);
+    (dir.tracks || []).forEach((t) => {
+      flat.push({
+        value: t.value,
+        label: `${dir.name} — ${t.label}`,
+        description: t.description || ""
+      });
     });
+  });
 
-    priority1.appendChild(og1);
-    priority2.appendChild(og2);
+  flat.forEach((item) => {
+    const o1 = document.createElement("option");
+    o1.value = item.value;
+    o1.textContent = item.label;
+    o1.dataset.description = item.description;
+    priority1.appendChild(o1);
+
+    const o2 = document.createElement("option");
+    o2.value = item.value;
+    o2.textContent = item.label;
+    o2.dataset.description = item.description;
+    priority2.appendChild(o2);
   });
 
   // сброс описаний
-  priority1.value = "";
-  priority2.value = "";
-  priority1Desc.textContent = "";
-  priority2Desc.textContent = "";
   setBlockVisible(priority1Desc, false);
   setBlockVisible(priority2Desc, false);
+  priority1Desc.textContent = "";
+  priority2Desc.textContent = "";
 }
+
 
 function updatePriorityDescription(selectEl, descEl) {
   const opt = selectEl.options[selectEl.selectedIndex];
@@ -987,3 +988,24 @@ setBlockVisible(priority2Desc, false);
 
 resetSelect(priority1, "— Выберите —");
 resetSelect(priority2, "— Выберите —");
+
+
+/* =========================================================
+   Pretty date picker (Flatpickr) — делает календарь аккуратным
+========================================================= */
+(function initBirthDatePicker() {
+  const el = document.getElementById("birth_date");
+  if (!el) return;
+
+  // Если flatpickr недоступен (например, без интернета) — останется нативный календарь
+  if (typeof window.flatpickr !== "function") return;
+
+  window.flatpickr(el, {
+    locale: window.flatpickr.l10ns?.ru || "ru",
+    dateFormat: "Y-m-d",
+    // Красивый вид пользователю, при этом value остаётся YYYY-MM-DD
+    altInput: true,
+    altFormat: "d.m.Y",
+    allowInput: true
+  });
+})();
