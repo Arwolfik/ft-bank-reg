@@ -7,7 +7,7 @@ if (tg) {
   try { tg.expand(); } catch (_) {}
 
 // Yandex Cloud Function endpoint (замени на свой URL)
-const FUNCTION_URL = "https://functions.yandexcloud.net/<YOUR_FUNCTION_ID>/submit";
+const FUNCTION_URL = "https://functions.yandexcloud.net/d4e1po7m6l0nno0u1c5h/submit";
 }
 
 /* =========================================================
