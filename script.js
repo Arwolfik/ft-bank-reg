@@ -5,6 +5,9 @@ const tg = window.Telegram?.WebApp;
 if (tg) {
   tg.ready();
   try { tg.expand(); } catch (_) {}
+
+// Yandex Cloud Function endpoint (замени на свой URL)
+const FUNCTION_URL = "https://functions.yandexcloud.net/<YOUR_FUNCTION_ID>/submit";
 }
 
 /* =========================================================
@@ -726,38 +729,40 @@ function resetSelect(select, placeholder) {
 }
 
 
+
 function fillPrioritySelects(directionType) {
   // directionType: "IT" | "Бизнес"
   const source = directionType === "IT" ? IT_DIRECTIONS : NON_IT_DIRECTIONS;
 
-  // Вместо <optgroup> (которые в моб. селектах выглядят “серым” и путают)
-  // делаем плоский список: "Направление — Трек"
   resetSelect(priority1, "— Выберите —");
   resetSelect(priority2, "— Выберите —");
 
-  const flat = [];
+  // Красивое разделение: направление -> треки (optgroup)
   source.forEach((dir) => {
-    (dir.tracks || []).forEach((t) => {
-      flat.push({
-        value: t.value,
-        label: `${dir.name} — ${t.label}`,
-        description: t.description || ""
-      });
+    const tracks = (dir.tracks || []).filter(t => (t.label || "").trim().length > 0);
+
+    const og1 = document.createElement("optgroup");
+    og1.label = dir.name;
+
+    const og2 = document.createElement("optgroup");
+    og2.label = dir.name;
+
+    tracks.forEach((t) => {
+      const o1 = document.createElement("option");
+      o1.value = t.value;
+      o1.textContent = t.label;
+      o1.dataset.description = t.description || "";
+      og1.appendChild(o1);
+
+      const o2 = document.createElement("option");
+      o2.value = t.value;
+      o2.textContent = t.label;
+      o2.dataset.description = t.description || "";
+      og2.appendChild(o2);
     });
-  });
 
-  flat.forEach((item) => {
-    const o1 = document.createElement("option");
-    o1.value = item.value;
-    o1.textContent = item.label;
-    o1.dataset.description = item.description;
-    priority1.appendChild(o1);
-
-    const o2 = document.createElement("option");
-    o2.value = item.value;
-    o2.textContent = item.label;
-    o2.dataset.description = item.description;
-    priority2.appendChild(o2);
+    if (og1.children.length) priority1.appendChild(og1);
+    if (og2.children.length) priority2.appendChild(og2);
   });
 
   // сброс описаний
@@ -766,6 +771,7 @@ function fillPrioritySelects(directionType) {
   priority1Desc.textContent = "";
   priority2Desc.textContent = "";
 }
+
 
 
 function updatePriorityDescription(selectEl, descEl) {
@@ -892,13 +898,14 @@ if (policyLink && policyText) {
 /* =========================================================
    Submit
 ========================================================= */
-form.addEventListener("submit", (e) => {
+
+form.addEventListener("submit", async (e) => {
   e.preventDefault();
   clearMessages();
 
   const data = Object.fromEntries(new FormData(form).entries());
 
-  // Required
+  // Минимальная строгая валидация ключевых полей анкеты
   if (!data.last_name?.trim()) return (errorEl.textContent = "Укажите Фамилию.");
   if (!data.first_name?.trim()) return (errorEl.textContent = "Укажите Имя.");
 
@@ -935,7 +942,6 @@ form.addEventListener("submit", (e) => {
   if (!data.internship_direction) return (errorEl.textContent = "Выберите направление стажировки.");
 
   if (data.internship_direction === "IT") {
-    // courses optional, but if chosen (and not "Не проходил(а)") -> year required
     if (data.online_courses && data.online_courses !== "Не проходил(а)") {
       if (!data.online_course_year) return (errorEl.textContent = "Выберите год окончания онлайн-курса.");
       if (data.online_course_year === "Другой" && !data.online_course_year_other?.trim()) {
@@ -950,28 +956,30 @@ form.addEventListener("submit", (e) => {
   if (!data.hours_per_week) return (errorEl.textContent = "Выберите количество часов.");
   if (!data.ready_6_months) return (errorEl.textContent = "Укажите готовность к стажировке на 6 месяцев.");
 
-  // Attach track descriptions (useful to store)
-  const p1Opt = priority1.options[priority1.selectedIndex];
-  const p2Opt = priority2.options[priority2.selectedIndex];
-  data.priority1_description = p1Opt?.dataset?.description || "";
-  data.priority2_description = p2Opt?.dataset?.description || "";
+  // Добавим tg данные (опционально)
+  const user = window.Telegram?.WebApp?.initDataUnsafe?.user;
+  if (user?.id) data.tg_user_id = String(user.id);
+  if (user?.username) data.tg_username = String(user.username);
 
-  const payload = JSON.stringify(data);
+  try {
+    const res = await fetch(FUNCTION_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    });
 
-  if (tg && typeof tg.sendData === "function") {
-    try {
-      tg.sendData(payload);
-      resultEl.textContent = "Данные отправлены ✅";
-    } catch (err) {
-      console.error(err);
-      errorEl.textContent = "Не удалось отправить данные в Telegram.";
+    const out = await res.json().catch(() => null);
+
+    if (!res.ok || !out?.ok) {
+      throw new Error(out?.error || out?.details || `HTTP ${res.status}`);
     }
-  } else {
-    console.log("Payload:", payload);
-    resultEl.textContent = "Готово ✅ (не Telegram среда — данные в консоли)";
+
+    resultEl.textContent = "Данные отправлены ✅";
+  } catch (err) {
+    console.error(err);
+    errorEl.textContent = "Ошибка отправки: " + (err?.message || String(err));
   }
 });
-
 /* =========================================================
    Init
 ========================================================= */
@@ -990,22 +998,90 @@ resetSelect(priority1, "— Выберите —");
 resetSelect(priority2, "— Выберите —");
 
 
+
+
 /* =========================================================
-   Pretty date picker (Flatpickr) — делает календарь аккуратным
+   Pretty date picker (без внешних библиотек)
 ========================================================= */
 (function initBirthDatePicker() {
-  const el = document.getElementById("birth_date");
-  if (!el) return;
+  const day = document.getElementById("birth_day");
+  const month = document.getElementById("birth_month");
+  const year = document.getElementById("birth_year");
+  const hidden = document.getElementById("birth_date");
 
-  // Если flatpickr недоступен (например, без интернета) — останется нативный календарь
-  if (typeof window.flatpickr !== "function") return;
+  if (!day || !month || !year || !hidden) return;
 
-  window.flatpickr(el, {
-    locale: window.flatpickr.l10ns?.ru || "ru",
-    dateFormat: "Y-m-d",
-    // Красивый вид пользователю, при этом value остаётся YYYY-MM-DD
-    altInput: true,
-    altFormat: "d.m.Y",
-    allowInput: true
+  // Заполняем дни 1..31
+  for (let d = 1; d <= 31; d++) {
+    const opt = document.createElement("option");
+    opt.value = String(d).padStart(2, "0");
+    opt.textContent = String(d);
+    day.appendChild(opt);
+  }
+
+  // Месяцы
+  const months = [
+    ["01", "Январь"], ["02", "Февраль"], ["03", "Март"], ["04", "Апрель"],
+    ["05", "Май"], ["06", "Июнь"], ["07", "Июль"], ["08", "Август"],
+    ["09", "Сентябрь"], ["10", "Октябрь"], ["11", "Ноябрь"], ["12", "Декабрь"]
+  ];
+  months.forEach(([val, name]) => {
+    const opt = document.createElement("option");
+    opt.value = val;
+    opt.textContent = name;
+    month.appendChild(opt);
   });
+
+  // Годы: текущий-14 ... текущий-80
+  const now = new Date();
+  const currentYear = now.getFullYear();
+  const maxY = currentYear - 14;
+  const minY = currentYear - 80;
+
+  for (let y = maxY; y >= minY; y--) {
+    const opt = document.createElement("option");
+    opt.value = String(y);
+    opt.textContent = String(y);
+    year.appendChild(opt);
+  }
+
+  function daysInMonth(yyyy, mm) {
+    return new Date(Number(yyyy), Number(mm), 0).getDate();
+  }
+
+  function clampDays() {
+    if (!year.value || !month.value) return;
+    const maxDay = daysInMonth(year.value, month.value);
+
+    for (let i = 1; i < day.options.length; i++) {
+      const v = Number(day.options[i].value);
+      day.options[i].disabled = v > maxDay;
+    }
+
+    if (day.value && Number(day.value) > maxDay) {
+      day.value = "";
+    }
+  }
+
+  function syncHidden() {
+    clampDays();
+    if (year.value && month.value && day.value) {
+      hidden.value = `${year.value}-${month.value}-${day.value}`;
+    } else {
+      hidden.value = "";
+    }
+  }
+
+  year.addEventListener("change", syncHidden);
+  month.addEventListener("change", syncHidden);
+  day.addEventListener("change", syncHidden);
+
+  // Если hidden уже заполнен — распарсим
+  if (hidden.value && /^\d{4}-\d{2}-\d{2}$/.test(hidden.value)) {
+    const [yy, mm, dd] = hidden.value.split("-");
+    year.value = yy;
+    month.value = mm;
+    clampDays();
+    day.value = dd;
+  }
 })();
