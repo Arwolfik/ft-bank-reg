@@ -3,54 +3,190 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Регистрация</title>
+  <title>Анкета регистрации</title>
 
   <link rel="stylesheet" href="./style.css" />
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
+
+  <!-- РОВНОЕ ВЫРАВНИВАНИЕ ТЕКСТА ВЕЗДЕ -->
+  <style>
+    body, form, label, input, select, textarea, button, .hint, .policy-text, .text-block, p, h2 {
+      text-align: left !important;
+    }
+    /* Описания треков: сохраняем переносы строк */
+    .hint, .policy-text, #priority1_description, #priority2_description {
+      white-space: pre-line !important;
+    }
+    /* Чтобы label и поля стояли ровно */
+    label { line-height: 1.25; }
+  </style>
 </head>
 
 <body>
-
-  <!-- Таймер (если не нужен — можно удалить блок целиком) -->
-  <div id="timer">
-    Осталось времени: <span id="time-display">15:00</span>
-  </div>
-
   <h2>Анкета регистрации</h2>
 
   <form id="reg-form" novalidate>
-    <!-- Базовые поля (пример). Если у тебя уже есть свои поля из анкеты — оставь их, этот блок можно расширять. -->
-    <label for="full_name">ФИО</label>
-    <input id="full_name" name="full_name" type="text" placeholder="Иванов Иван Иванович" required />
+    <label for="last_name">Фамилия</label>
+    <input id="last_name" name="last_name" type="text" autocomplete="family-name" required />
 
-    <label for="email">Email</label>
-    <input id="email" name="email" type="email" placeholder="name@email.com" required />
+    <label for="first_name">Имя</label>
+    <input id="first_name" name="first_name" type="text" autocomplete="given-name" required />
+
+    <label for="email">E-mail</label>
+    <input id="email" name="email" type="email" autocomplete="email" required />
     <p id="email-error" class="error" style="display:none;"></p>
 
-    <label for="phone">Телефон</label>
-    <input id="phone" name="phone" type="tel" placeholder="+7..." required />
+    <label for="phone">Номер телефона</label>
+    <input id="phone" name="phone" type="tel" autocomplete="tel" required />
 
-    <!-- ========== ВЫБОР НАПРАВЛЕНИЯ (IT / Non-IT) ========== -->
-    <label for="track_type">Тип направления</label>
-    <select id="track_type" name="track_type" required>
+    <label for="birth_date">Дата рождения</label>
+    <input id="birth_date" name="birth_date" type="date" required />
+
+    <label for="citizenship">Гражданство</label>
+    <select id="citizenship" name="citizenship" required>
       <option value="">— Выберите —</option>
-      <option value="it">IT</option>
-      <option value="non_it">Не IT</option>
+      <option value="РФ">РФ</option>
+      <option value="Беларусь">Беларусь</option>
+      <option value="Казахстан">Казахстан</option>
+      <option value="Кыргызстан">Кыргызстан</option>
+      <option value="Армения">Армения</option>
+      <option value="Другое">Другое</option>
     </select>
 
-    <label for="direction">Направление</label>
-    <select id="direction" name="direction" required disabled>
-      <option value="">— Выберите направление —</option>
+    <div id="citizenship_other_block" style="display:none;">
+      <label for="citizenship_other">Укажите гражданство (если выбрано «Другое»)</label>
+      <input id="citizenship_other" name="citizenship_other" type="text" />
+    </div>
+
+    <label for="city">Город проживания</label>
+    <select id="city" name="city" required>
+      <option value="">— Выберите —</option>
+      <option value="Москва">Москва</option>
+      <option value="Другой">Другой</option>
     </select>
 
-    <label for="track">Трек</label>
-    <select id="track" name="track" required disabled>
-      <option value="">— Выберите трек —</option>
+    <div id="city_other_block" style="display:none;">
+      <label for="city_other">Укажите город проживания</label>
+      <input id="city_other" name="city_other" type="text" />
+    </div>
+
+    <div id="timezone_diff_block" style="display:none;">
+      <label for="timezone_diff">Разница во времени относительно московского часового пояса</label>
+      <select id="timezone_diff" name="timezone_diff">
+        <option value="">— Выберите —</option>
+        <option value="4 и менее часов">4 и менее часов</option>
+        <option value="более 4-х часов">более 4-х часов</option>
+      </select>
+    </div>
+
+    <label for="university">Наименование вуза</label>
+    <input id="university" name="university" type="text" />
+
+    <label for="education_degree">Степень образования</label>
+    <select id="education_degree" name="education_degree" required>
+      <option value="">— Выберите —</option>
+      <option value="Бакалавриат">Бакалавриат</option>
+      <option value="Специалитет">Специалитет</option>
+      <option value="Магистратура">Магистратура</option>
+      <option value="Аспирантура">Аспирантура</option>
+      <option value="Нет высшего образования">Нет высшего образования</option>
     </select>
 
-    <div id="track_description" class="hint" style="display:none;"></div>
+    <div id="grad_year_block">
+      <label for="graduation_year">Год выпуска</label>
+      <select id="graduation_year" name="graduation_year">
+        <option value="">— Выберите —</option>
+        <option value="2022 и ранее">2022 и ранее</option>
+        <option value="2023">2023</option>
+        <option value="2024">2024</option>
+        <option value="2025">2025</option>
+        <option value="2026">2026</option>
+        <option value="2027">2027</option>
+        <option value="2028 и позднее">2028 и позднее</option>
+      </select>
+    </div>
 
-    <!-- Политика (пример: если у тебя другой текст/логика — просто замени контент) -->
+    <label for="specialty">Специальность</label>
+    <select id="specialty" name="specialty" required>
+      <option value="">— Выберите —</option>
+      <option value="Инженерно-техническая">Инженерно-техническая</option>
+      <option value="ИТ">ИТ</option>
+      <option value="Математика и естественные науки">Математика и естественные науки</option>
+      <option value="Бизнес-информатика">Бизнес-информатика</option>
+      <option value="Экономика и финансы">Экономика и финансы</option>
+      <option value="Социально-гуманитарная">Социально-гуманитарная</option>
+      <option value="Другое">Другое</option>
+    </select>
+
+    <div id="specialty_other_block" style="display:none;">
+      <label for="specialty_other">Укажите специальность (если выбрано «Другое»)</label>
+      <input id="specialty_other" name="specialty_other" type="text" />
+    </div>
+
+    <label for="internship_direction">Направление стажировки</label>
+    <select id="internship_direction" name="internship_direction" required>
+      <option value="">— Выберите —</option>
+      <option value="IT">IT</option>
+      <option value="Бизнес">Бизнес</option>
+    </select>
+
+    <div id="online_courses_block" style="display:none;">
+      <div class="hint">Также мы рассматриваем выпускников Я.Практикума, Skillbox или Karpov.courses</div>
+
+      <label for="online_courses">Вы проходили онлайн-курсы?</label>
+      <select id="online_courses" name="online_courses">
+        <option value="">— Выберите —</option>
+        <option value="Я. Практикум">Я. Практикум</option>
+        <option value="Skillbox">Skillbox</option>
+        <option value="Karpov.courses">Karpov.courses</option>
+        <option value="Другой курс">Другой курс</option>
+        <option value="Не проходил(а)">Не проходил(а)</option>
+      </select>
+
+      <div id="online_course_year_block" style="display:none;">
+        <label for="online_course_year">Год окончания прохождения онлайн-курса</label>
+        <select id="online_course_year" name="online_course_year">
+          <option value="">— Выберите —</option>
+          <option value="2025">2025</option>
+          <option value="2026">2026</option>
+          <option value="Другой">Другой</option>
+        </select>
+
+        <div id="online_course_year_other_block" style="display:none;">
+          <label for="online_course_year_other">Укажите год (если выбрано «Другой»)</label>
+          <input id="online_course_year_other" name="online_course_year_other" type="text" inputmode="numeric" />
+        </div>
+      </div>
+    </div>
+
+    <div id="priorities_block" style="display:none;">
+      <label for="priority1">Приоритетное направление №1</label>
+      <select id="priority1" name="priority1"></select>
+      <div id="priority1_description" class="hint" style="display:none;"></div>
+
+      <label for="priority2">Приоритетное направление №2</label>
+      <select id="priority2" name="priority2"></select>
+      <div id="priority2_description" class="hint" style="display:none;"></div>
+    </div>
+
+    <div class="hint">Сколько часов в неделю вы можете работать (с понедельника по пятницу с 9:00 до 18:00 по Мск)?</div>
+    <label for="hours_per_week">Выберите количество часов</label>
+    <select id="hours_per_week" name="hours_per_week" required>
+      <option value="">— Выберите —</option>
+      <option value="Меньше 25 часов в будни">Меньше 25 часов в будни</option>
+      <option value="25 часов в будни">25 часов в будни</option>
+      <option value="30 часов в будни">30 часов в будни</option>
+      <option value="35 часов в будни">35 часов в будни</option>
+      <option value="40 часов в будни">40 часов в будни</option>
+    </select>
+
+    <label for="ready_6_months">Готовность к стажировке на 6 месяцев</label>
+    <select id="ready_6_months" name="ready_6_months" required>
+      <option value="">— Выберите —</option>
+      <option value="Да">Да</option>
+      <option value="Нет">Нет</option>
+    </select>
+
     <div class="file-info">
       <span class="policy-link" id="policy-link">Политика обработки данных</span>
     </div>
