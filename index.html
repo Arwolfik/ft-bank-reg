@@ -1,3 +1,4 @@
+
 <!doctype html>
 <html lang="ru">
 <head>
@@ -7,10 +8,7 @@
 
   <link rel="stylesheet" href="./style.css" />
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" />
-
-
-  <!-- РОВНОЕ ВЫРАВНИВАНИЕ ТЕКСТА ВЕЗДЕ -->
+<!-- РОВНОЕ ВЫРАВНИВАНИЕ ТЕКСТА ВЕЗДЕ -->
   
   <style>
     /* ВАЖНО: постоянное ровное выравнивание текста */
@@ -66,7 +64,12 @@
       border-color: var(--color-accent) !important;
       box-shadow: 0 0 0 3px rgba(255, 231, 0, 0.35) !important;
     }
-  </style>
+  
+    /* Красивый кастомный выбор даты (без внешних библиотек) */
+    .date-picker { width: 100%; max-width: 600px; }
+    .date-row { display: flex; gap: 10px; }
+    .date-row select { flex: 1; }
+    </style>
 
 </head>
 
@@ -88,9 +91,23 @@
     <input id="phone" name="phone" type="tel" autocomplete="tel" required />
 
     <label for="birth_date">Дата рождения</label>
-    <input id="birth_date" name="birth_date" type="date" required />
-
-    <label for="citizenship">Гражданство</label>
+    
+    <div class="date-picker" id="birth_date_picker">
+      <div class="hint">Выберите дату рождения</div>
+      <div class="date-row">
+        <select id="birth_day" aria-label="День" required>
+          <option value="">День</option>
+        </select>
+        <select id="birth_month" aria-label="Месяц" required>
+          <option value="">Месяц</option>
+        </select>
+        <select id="birth_year" aria-label="Год" required>
+          <option value="">Год</option>
+        </select>
+      </div>
+      <input id="birth_date" name="birth_date" type="hidden" required />
+    </div>
+<label for="citizenship">Гражданство</label>
     <select id="citizenship" name="citizenship" required>
       <option value="">— Выберите —</option>
       <option value="РФ">РФ</option>
