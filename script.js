@@ -1,6 +1,5 @@
+// === BACKEND ENDPOINT (Yandex Cloud Function) ===
 const FUNCTION_URL = "https://functions.yandexcloud.net/d4e1po7m6l0nno0u1c5h/submit";
-
-
 
 /* =========================================================
    Telegram WebApp
@@ -10,6 +9,8 @@ if (tg) {
   tg.ready();
   try { tg.expand(); } catch (_) {}
 
+// Yandex Cloud Function endpoint (замени на свой URL)
+}
 
 /* =========================================================
    Directions & tracks (from IT.csv / Non-IT.csv) — FULL TEXT
