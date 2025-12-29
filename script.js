@@ -2,6 +2,7 @@
 const FUNCTION_URL = "https://functions.yandexcloud.net/d4e1po7m6l0nno0u1c5h";
 
 
+
 /* =========================================================
    Persist form state (localStorage)
 ========================================================= */
@@ -59,23 +60,24 @@ function applyFormState(formEl, state) {
     } else {
       el.value = state[el.name];
     }
+  });
 
-    // важный момент: дергаем change, чтобы все зависимые блоки (другое/таймзона/описания) восстановились корректно
+  // после проставления значений — триггерим события, чтобы восстановить зависимые блоки
+  els.forEach((el) => {
+    if (!el.name) return;
+    if (!(el.name in state)) return;
     el.dispatchEvent(new Event("change", { bubbles: true }));
     el.dispatchEvent(new Event("input", { bubbles: true }));
   });
 }
 
-function debounce(fn, wait = 400) {
+function debounce(fn, wait = 350) {
   let t = null;
   return (...args) => {
     if (t) clearTimeout(t);
     t = setTimeout(() => fn(...args), wait);
   };
 }
-/* =========================================================
-   Telegram WebApp
-========================================================= */
 
 /* =========================================================
    Platform context: Telegram / VK
@@ -86,7 +88,7 @@ const APP_CONTEXT = {
   vk: null,
 };
 
-// Telegram
+// Telegram (если открыто как Telegram WebApp)
 try {
   const tg = window.Telegram?.WebApp;
   if (tg) {
@@ -102,30 +104,29 @@ try {
   }
 } catch (_) {}
 
-// VK
+// VK Mini Apps (если открыто внутри VK)
 async function initVK() {
   try {
-    // vkBridge can be loaded from CDN in index.html
     const vkBridge = window.vkBridge;
     if (!vkBridge) return;
-
     await vkBridge.send("VKWebAppInit");
     APP_CONTEXT.platform = "vk";
 
-    // launch params from URL
+    // launch params из URL
     const qs = window.location.search ? window.location.search.replace(/^\?/, "") : "";
     APP_CONTEXT.vk = { launchParamsRaw: qs };
 
-    // user info (best effort)
+    // user info (best-effort)
     try {
       const info = await vkBridge.send("VKWebAppGetUserInfo");
       APP_CONTEXT.vk.user = info;
     } catch (_) {}
-  } catch (e) {
-    // if init fails, keep platform as web/telegram
-  }
+  } catch (_) {}
 }
 initVK();
+/* =========================================================
+   Telegram WebApp
+========================================================= */
 const tg = window.Telegram?.WebApp;
 if (tg) {
   tg.ready();
@@ -913,11 +914,7 @@ function updatePriorityDescription(selectEl, descEl) {
 ========================================================= */
 
 // Citizenship -> Other
-citizenship.addEventListener("change", () => {
-  const isOther = citizenship.value === "Другое";
-  setBlockVisible(citizenshipOtherBlock, isOther);
   if (!isOther) {
-    const el = document.getElementById("citizenship_other");
     if (el) el.value = "";
   }
 });
@@ -1085,24 +1082,23 @@ form.addEventListener("submit", async (e) => {
 
   try {
     // platform meta
-  data.platform = APP_CONTEXT.platform;
+    data.platform = APP_CONTEXT.platform;
 
-  if (APP_CONTEXT.platform === "telegram" && APP_CONTEXT.tg) {
-    data.tg_init_data = APP_CONTEXT.tg.initData || "";
-    const u = APP_CONTEXT.tg.user;
-    if (u?.id) data.tg_user_id = String(u.id);
-    if (u?.username) data.tg_username = String(u.username);
-    if (APP_CONTEXT.tg.start_param) data.tg_start_param = String(APP_CONTEXT.tg.start_param);
-  }
+    if (APP_CONTEXT.platform === "telegram" && APP_CONTEXT.tg) {
+      data.tg_init_data = APP_CONTEXT.tg.initData || "";
+      const u = APP_CONTEXT.tg.user;
+      if (u?.id) data.tg_user_id = String(u.id);
+      if (u?.username) data.tg_username = String(u.username);
+      if (APP_CONTEXT.tg.start_param) data.tg_start_param = String(APP_CONTEXT.tg.start_param);
+    }
 
-  if (APP_CONTEXT.platform === "vk") {
-    // launch params are needed for server-side signature verification
-    data.vk_launch_params = APP_CONTEXT.vk?.launchParamsRaw || "";
-    const vu = APP_CONTEXT.vk?.user;
-    if (vu?.id) data.vk_user_id = String(vu.id);
-  }
+    if (APP_CONTEXT.platform === "vk") {
+      data.vk_launch_params = APP_CONTEXT.vk?.launchParamsRaw || "";
+      const vu = APP_CONTEXT.vk?.user;
+      if (vu?.id) data.vk_user_id = String(vu.id);
+    }
 
-  const res = await fetch(FUNCTION_URL, {
+    const res = await fetch(FUNCTION_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
