@@ -1,5 +1,5 @@
 // === BACKEND ENDPOINT (Yandex Cloud Function) ===
-const FUNCTION_URL = "https://functions.yandexcloud.net/d4e1po7m6l0nno0u1c5h/";
+const FUNCTION_URL = "https://functions.yandexcloud.net/d4e1po7m6l0nno0u1c5h";
 
 /* =========================================================
    Telegram WebApp
@@ -979,7 +979,13 @@ form.addEventListener("submit", async (e) => {
     resultEl.textContent = "Данные отправлены ✅";
   } catch (err) {
     console.error(err);
-    errorEl.textContent = "Ошибка отправки: " + (err?.message || String(err));
+    const msg = (err && err.message) ? err.message : String(err);
+    // В Safari/Telegram WebView сетевые/CORS проблемы часто выглядят как "Load failed"
+    if (/Load failed|Failed to fetch/i.test(msg)) {
+      errorEl.textContent = "Ошибка отправки: Load failed. Обычно это CORS/Origin или недоступность функции. Проверь ALLOWED_ORIGINS в функции и что URL доступен по HTTPS.";
+    } else {
+      errorEl.textContent = "Ошибка отправки: " + msg;
+    }
   }
 });
 /* =========================================================
