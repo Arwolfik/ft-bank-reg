@@ -1,9 +1,131 @@
 // === BACKEND ENDPOINT (Yandex Cloud Function) ===
 const FUNCTION_URL = "https://functions.yandexcloud.net/d4e1po7m6l0nno0u1c5h";
 
+
+/* =========================================================
+   Persist form state (localStorage)
+========================================================= */
+const FORM_STATE_KEY = "ft-bank-reg-form-state:v1";
+
+function readState() {
+  try {
+    const raw = localStorage.getItem(FORM_STATE_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch (_) {
+    return null;
+  }
+}
+
+function writeState(state) {
+  try {
+    localStorage.setItem(FORM_STATE_KEY, JSON.stringify(state));
+  } catch (_) {}
+}
+
+function clearState() {
+  try {
+    localStorage.removeItem(FORM_STATE_KEY);
+  } catch (_) {}
+}
+
+function captureFormState(formEl) {
+  const state = {};
+  const els = formEl.querySelectorAll("input, select, textarea");
+  els.forEach((el) => {
+    if (!el.name) return;
+
+    if (el.type === "checkbox") {
+      state[el.name] = !!el.checked;
+    } else if (el.type === "radio") {
+      if (el.checked) state[el.name] = el.value;
+    } else {
+      state[el.name] = el.value;
+    }
+  });
+  return state;
+}
+
+function applyFormState(formEl, state) {
+  if (!state) return;
+  const els = formEl.querySelectorAll("input, select, textarea");
+  els.forEach((el) => {
+    if (!el.name) return;
+    if (!(el.name in state)) return;
+
+    if (el.type === "checkbox") {
+      el.checked = !!state[el.name];
+    } else if (el.type === "radio") {
+      el.checked = String(state[el.name]) === String(el.value);
+    } else {
+      el.value = state[el.name];
+    }
+
+    // важный момент: дергаем change, чтобы все зависимые блоки (другое/таймзона/описания) восстановились корректно
+    el.dispatchEvent(new Event("change", { bubbles: true }));
+    el.dispatchEvent(new Event("input", { bubbles: true }));
+  });
+}
+
+function debounce(fn, wait = 400) {
+  let t = null;
+  return (...args) => {
+    if (t) clearTimeout(t);
+    t = setTimeout(() => fn(...args), wait);
+  };
+}
 /* =========================================================
    Telegram WebApp
 ========================================================= */
+
+/* =========================================================
+   Platform context: Telegram / VK
+========================================================= */
+const APP_CONTEXT = {
+  platform: "web",
+  tg: null,
+  vk: null,
+};
+
+// Telegram
+try {
+  const tg = window.Telegram?.WebApp;
+  if (tg) {
+    APP_CONTEXT.platform = "telegram";
+    APP_CONTEXT.tg = {
+      initData: tg.initData || "",
+      initDataUnsafe: tg.initDataUnsafe || {},
+      user: tg.initDataUnsafe?.user || null,
+      start_param: tg.initDataUnsafe?.start_param || "",
+    };
+    tg.ready();
+    try { tg.expand(); } catch (_) {}
+  }
+} catch (_) {}
+
+// VK
+async function initVK() {
+  try {
+    // vkBridge can be loaded from CDN in index.html
+    const vkBridge = window.vkBridge;
+    if (!vkBridge) return;
+
+    await vkBridge.send("VKWebAppInit");
+    APP_CONTEXT.platform = "vk";
+
+    // launch params from URL
+    const qs = window.location.search ? window.location.search.replace(/^\?/, "") : "";
+    APP_CONTEXT.vk = { launchParamsRaw: qs };
+
+    // user info (best effort)
+    try {
+      const info = await vkBridge.send("VKWebAppGetUserInfo");
+      APP_CONTEXT.vk.user = info;
+    } catch (_) {}
+  } catch (e) {
+    // if init fails, keep platform as web/telegram
+  }
+}
+initVK();
 const tg = window.Telegram?.WebApp;
 if (tg) {
   tg.ready();
@@ -675,8 +797,6 @@ const errorEl = document.getElementById("error");
 const policyLink = document.getElementById("policy-link");
 const policyText = document.getElementById("policy-text");
 
-const citizenship = document.getElementById("citizenship");
-const citizenshipOtherBlock = document.getElementById("citizenship_other_block");
 
 const city = document.getElementById("city");
 const cityOtherBlock = document.getElementById("city_other_block");
@@ -920,11 +1040,6 @@ form.addEventListener("submit", async (e) => {
   if (!data.phone?.trim()) return (errorEl.textContent = "Укажите номер телефона.");
   if (!data.birth_date?.trim()) return (errorEl.textContent = "Укажите дату рождения.");
 
-  if (!data.citizenship) return (errorEl.textContent = "Выберите гражданство.");
-  if (data.citizenship === "Другое" && !data.citizenship_other?.trim()) {
-    return (errorEl.textContent = "Укажите гражданство (Другое).");
-  }
-
   if (!data.city) return (errorEl.textContent = "Выберите город проживания.");
   if (data.city === "Другой") {
     if (!data.city_other?.trim()) return (errorEl.textContent = "Укажите город проживания.");
@@ -969,7 +1084,25 @@ form.addEventListener("submit", async (e) => {
   if (sp) data.tg_start_param = String(sp);
 
   try {
-    const res = await fetch(FUNCTION_URL, {
+    // platform meta
+  data.platform = APP_CONTEXT.platform;
+
+  if (APP_CONTEXT.platform === "telegram" && APP_CONTEXT.tg) {
+    data.tg_init_data = APP_CONTEXT.tg.initData || "";
+    const u = APP_CONTEXT.tg.user;
+    if (u?.id) data.tg_user_id = String(u.id);
+    if (u?.username) data.tg_username = String(u.username);
+    if (APP_CONTEXT.tg.start_param) data.tg_start_param = String(APP_CONTEXT.tg.start_param);
+  }
+
+  if (APP_CONTEXT.platform === "vk") {
+    // launch params are needed for server-side signature verification
+    data.vk_launch_params = APP_CONTEXT.vk?.launchParamsRaw || "";
+    const vu = APP_CONTEXT.vk?.user;
+    if (vu?.id) data.vk_user_id = String(vu.id);
+  }
+
+  const res = await fetch(FUNCTION_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
@@ -982,6 +1115,7 @@ form.addEventListener("submit", async (e) => {
     }
 
     resultEl.textContent = "Данные отправлены ✅";
+    clearState();
   } catch (err) {
     console.error(err);
     const msg = (err && err.message) ? err.message : String(err);
@@ -996,7 +1130,6 @@ form.addEventListener("submit", async (e) => {
 /* =========================================================
    Init
 ========================================================= */
-setBlockVisible(citizenshipOtherBlock, false);
 setBlockVisible(cityOtherBlock, false);
 setBlockVisible(timezoneDiffBlock, false);
 setBlockVisible(specialtyOtherBlock, false);
