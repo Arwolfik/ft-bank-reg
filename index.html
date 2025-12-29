@@ -1,58 +1,55 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="ru">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Анкета регистрации</title>
-
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Регистрация</title>
   <link rel="stylesheet" href="style.css" />
-
-  <style>
-    /* Минимальные стили на случай, если style.css не подхватится */
-    .date-picker { width: 100%; max-width: 600px; }
-    .date-row { display: flex; gap: 10px; }
-    .date-row select { flex: 1; }
-  </style>
 </head>
-
 <body>
-  <h2>Анкета регистрации</h2>
 
-  <form id="registration-form" novalidate>
-    <!-- 1) ФИО -->
+  <div class="header">
+    <div class="left-logo"></div>
+    <h2>Анкета кандидата</h2>
+    <div class="right-logo"></div>
+  </div>
+
+  <form id="reg-form">
+    <!-- Фамилия / Имя -->
     <label for="last_name">Фамилия</label>
     <input id="last_name" name="last_name" type="text" required />
 
     <label for="first_name">Имя</label>
     <input id="first_name" name="first_name" type="text" required />
 
-    <!-- 2) Контакты -->
+    <!-- Email -->
     <label for="email">Email</label>
     <input id="email" name="email" type="email" required />
-    <p id="email-error" class="error" style="display:none;"></p>
+    <p id="email-error" class="error"></p>
 
+    <!-- Телефон -->
     <label for="phone">Номер телефона</label>
     <input id="phone" name="phone" type="tel" required />
 
-    <!-- 3) Дата рождения -->
-    <label for="birth_date">Дата рождения</label>
-    <div class="date-picker" id="birth_date_picker">
-      <div class="hint">Выберите дату рождения</div>
-      <div class="date-row">
-        <select id="birth_day" aria-label="День" required>
-          <option value="">День</option>
-        </select>
-        <select id="birth_month" aria-label="Месяц" required>
-          <option value="">Месяц</option>
-        </select>
-        <select id="birth_year" aria-label="Год" required>
-          <option value="">Год</option>
-        </select>
-      </div>
-      <input id="birth_date" name="birth_date" type="hidden" required />
+    <!-- Дата рождения (красивый селектор день/месяц/год) -->
+    <label>Дата рождения</label>
+    <div class="hint">Выберите день, месяц и год — поле заполнится автоматически</div>
+
+    <div style="display:flex; gap:10px; margin-bottom:20px;">
+      <select id="birth_day" required>
+        <option value="">День</option>
+      </select>
+      <select id="birth_month" required>
+        <option value="">Месяц</option>
+      </select>
+      <select id="birth_year" required>
+        <option value="">Год</option>
+      </select>
     </div>
 
-    <!-- 4) Город -->
+    <input type="hidden" id="birth_date" name="birth_date" required />
+
+    <!-- Город -->
     <label for="city">Город проживания</label>
     <select id="city" name="city" required>
       <option value="">— Выберите —</option>
@@ -66,8 +63,8 @@
       <input id="city_other" name="city_other" type="text" />
     </div>
 
-    <div id="timezone_block" style="display:none;">
-      <label for="timezone_diff">Разница во времени относительно Мск</label>
+    <div id="timezone_diff_block" style="display:none;">
+      <label for="timezone_diff">Разница во времени относительно московского часового пояса</label>
       <select id="timezone_diff" name="timezone_diff">
         <option value="">— Выберите —</option>
         <option value="4 и менее часов">4 и менее часов</option>
@@ -75,7 +72,7 @@
       </select>
     </div>
 
-    <!-- 5) Образование -->
+    <!-- Образование -->
     <label for="university">вуз</label>
     <input id="university" name="university" type="text" />
 
@@ -89,7 +86,7 @@
       <option value="Нет высшего образования">Нет высшего образования</option>
     </select>
 
-    <div id="graduation_year_block">
+    <div id="grad_year_block">
       <label for="graduation_year">Год выпуска</label>
       <select id="graduation_year" name="graduation_year">
         <option value="">— Выберите —</option>
@@ -102,7 +99,7 @@
       </select>
     </div>
 
-    <!-- 6) Специальность -->
+    <!-- Специальность -->
     <label for="specialty">Специальность</label>
     <select id="specialty" name="specialty" required>
       <option value="">— Выберите —</option>
@@ -121,14 +118,15 @@
       <input id="specialty_other" name="specialty_other" type="text" />
     </div>
 
-    <!-- 7) Направление стажировки (IT / Non-IT) -->
-    <label for="internship_direction">Направление (IT / не IT)</label>
+    <!-- Направление -->
+    <label for="internship_direction">Направление (IT/не IT)</label>
     <select id="internship_direction" name="internship_direction" required>
       <option value="">— Выберите —</option>
       <option value="IT">IT</option>
-      <option value="Бизнес">не IT</option>
+      <option value="Non-IT">Non-IT</option>
     </select>
 
+    <!-- Курсы -->
     <div id="online_courses_block" style="display:none;">
       <label for="online_courses">Онлайн курсы</label>
       <select id="online_courses" name="online_courses">
@@ -146,28 +144,30 @@
           <option value="2025">2025</option>
           <option value="Другой">Другой</option>
         </select>
+      </div>
 
-        <div id="online_course_year_other_block" style="display:none;">
-          <label for="online_course_year_other">Укажите год окончания</label>
-          <input id="online_course_year_other" name="online_course_year_other" type="text" />
-        </div>
+      <div id="online_course_year_other_block" style="display:none;">
+        <label for="online_course_year_other">Укажите год окончания</label>
+        <input id="online_course_year_other" name="online_course_year_other" type="text" />
       </div>
     </div>
 
-    <!-- 8) Приоритеты -->
-    <label for="priority1">Приоритет 1</label>
-    <select id="priority1" name="priority1" required>
-      <option value="">— Выберите —</option>
-    </select>
-    <div id="priority1-desc" class="hint" style="display:none;"></div>
+    <!-- Приоритеты (заполняются из JS списками/описаниями) -->
+    <div id="priorities_block">
+      <label for="priority1">Приоритет 1</label>
+      <select id="priority1" name="priority1" required>
+        <option value="">— Выберите —</option>
+      </select>
+      <div id="priority1_description" class="hint" style="display:none;"></div>
 
-    <label for="priority2">Приоритет 2</label>
-    <select id="priority2" name="priority2" required>
-      <option value="">— Выберите —</option>
-    </select>
-    <div id="priority2-desc" class="hint" style="display:none;"></div>
+      <label for="priority2">Приоритет 2</label>
+      <select id="priority2" name="priority2" required>
+        <option value="">— Выберите —</option>
+      </select>
+      <div id="priority2_description" class="hint" style="display:none;"></div>
+    </div>
 
-    <!-- 9) Часы -->
+    <!-- Часы -->
     <label for="hours_per_week">Кол-во часов</label>
     <select id="hours_per_week" name="hours_per_week" required>
       <option value="">— Выберите —</option>
@@ -176,26 +176,30 @@
       <option value="35 часов в будни">35 часов в будни</option>
       <option value="40 часов в будни">40 часов в будни</option>
     </select>
+
     <div class="hint">По графику 9:00–19:00 по Мск в будни</div>
 
-    <!-- 10) Готовность 6 месяцев -->
-    <label for="ready_6_months">Готовность 6 месяцев</label>
+    <!-- 6 месяцев -->
+    <label for="ready_6_months">Готовность к стажировке на 6 месяцев</label>
     <select id="ready_6_months" name="ready_6_months" required>
       <option value="">— Выберите —</option>
       <option value="Да">Да</option>
       <option value="Нет">Нет</option>
     </select>
 
-    <!-- Результаты / ошибки -->
+    <!-- Политика/персданные -->
+    <div class="file-info" style="margin-top: 10px;">
+      <span class="policy-link" id="policy-link">Согласие на обработку персональных данных</span>
+    </div>
+
+    <div class="policy-text" id="policy-text" style="display:none;">
+      Нажимая «Отправить», вы соглашаетесь на обработку персональных данных.
+    </div>
+
     <p id="error" class="error"></p>
     <p id="result"></p>
 
     <button type="submit">Отправить</button>
-
-    <!-- Блок согласия (оставляю как есть — он у тебя был в старой версии) -->
-    <div class="hint" style="margin-top:16px;">
-      Нажимая «Отправить», вы соглашаетесь с обработкой персональных данных.
-    </div>
   </form>
 
   <!-- VK Bridge -->
