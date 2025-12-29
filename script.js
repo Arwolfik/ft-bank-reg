@@ -1,5 +1,5 @@
 // === BACKEND ENDPOINT (Yandex Cloud Function) ===
-const FUNCTION_URL = "https://functions.yandexcloud.net/d4e1po7m6l0nno0u1c5h/submit";
+const FUNCTION_URL = "https://functions.yandexcloud.net/d4e1po7m6l0nno0u1c5h/";
 
 /* =========================================================
    Telegram WebApp
