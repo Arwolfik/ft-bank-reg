@@ -960,8 +960,13 @@ form.addEventListener("submit", async (e) => {
 
   // Добавим tg данные (опционально)
   const user = window.Telegram?.WebApp?.initDataUnsafe?.user;
+  // Подпись Telegram WebApp (нужна для серверной проверки)
+  data.tg_init_data = window.Telegram?.WebApp?.initData || "";
   if (user?.id) data.tg_user_id = String(user.id);
   if (user?.username) data.tg_username = String(user.username);
+  // start_param (если миниапп открыт по ссылке вида ...?startapp=XXX)
+  const sp = window.Telegram?.WebApp?.initDataUnsafe?.start_param;
+  if (sp) data.tg_start_param = String(sp);
 
   try {
     const res = await fetch(FUNCTION_URL, {
