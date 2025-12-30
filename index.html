@@ -9,8 +9,8 @@
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <!-- VK BRIDGE -->
   <script src="https://unpkg.com/@vkontakte/vk-bridge/dist/browser.min.js"></script>
-
-  <!-- РОВНОЕ ВЫРАВНИВАНИЕ ТЕКСТА ВЕЗДЕ -->
+<!-- РОВНОЕ ВЫРАВНИВАНИЕ ТЕКСТА ВЕЗДЕ -->
+  
   <style>
     /* ВАЖНО: постоянное ровное выравнивание текста */
     body, form, label, input, select, textarea, button,
@@ -52,25 +52,12 @@
       white-space: pre-line !important;
     }
 
-    /* Улучшаем внешний вид input[type=date] (насколько позволяет браузер) */
-    input[type="date"]{
-      appearance: none;
-      -webkit-appearance: none;
-      background-color: #fff !important;
-    }
-
-    /* Чуть приятнее подсветка фокуса для date */
-    input[type="date"]:focus{
-      outline: none;
-      border-color: var(--color-accent) !important;
-      box-shadow: 0 0 0 3px rgba(255, 231, 0, 0.35) !important;
-    }
-
     /* Красивый кастомный выбор даты (без внешних библиотек) */
     .date-picker { width: 100%; max-width: 600px; }
     .date-row { display: flex; gap: 10px; }
     .date-row select { flex: 1; }
-  </style>
+    </style>
+
 </head>
 
 <body>
@@ -91,7 +78,7 @@
     <input id="phone" name="phone" type="tel" autocomplete="tel" required />
 
     <label for="birth_date">Дата рождения</label>
-
+    
     <div class="date-picker" id="birth_date_picker">
       <div class="hint">Выберите дату рождения</div>
       <div class="date-row">
@@ -107,8 +94,6 @@
       </div>
       <input id="birth_date" name="birth_date" type="hidden" required />
     </div>
-
-    <!-- ГРАЖДАНСТВО УДАЛЕНО -->
 
     <label for="city">Город проживания</label>
     <select id="city" name="city" required>
@@ -180,7 +165,7 @@
     <label for="internship_direction">Направление стажировки</label>
     <select id="internship_direction" name="internship_direction" required>
       <option value="">— Выберите —</option>
-      <option value="IT">IT</option>
+      <option value="IT">ИТ</option>
       <option value="Бизнес">Бизнес</option>
     </select>
 
