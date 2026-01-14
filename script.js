@@ -678,7 +678,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // direction normalization for backend: IT / Non-IT
     if (data.internship_direction === "ИТ") data.internship_direction = "IT";
-    if (data.internship_direction === "Бизнес") data.internship_direction = "Non-IT";
+    if (data.internship_direction === "Бизнес") data.internship_direction = "Бизнес";
 
     // online courses
     if (data.internship_direction !== "IT") {
