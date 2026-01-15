@@ -76,6 +76,11 @@
 
     <label for="phone">Номер телефона</label>
     <input id="phone" name="phone" type="tel" autocomplete="tel" required />
+    <label class="checkbox-row" for="phone-nonru">
+    <input type="checkbox" id="phone-nonru" />
+    <span>Номер не РФ</span>
+    </label>
+
 
     <label for="birth_date">Дата рождения</label>
     
@@ -208,7 +213,7 @@
       <div id="priority2_description" class="hint" style="display:none;"></div>
     </div>
 
-    <div class="hint">Сколько часов в неделю вы можете работать (с понедельника по пятницу с 9:00 до 19:00 по Мск)?</div>
+    <div class="question-title">Сколько часов в неделю вы можете работать (с понедельника по пятницу с 9:00 до 19:00 по Мск)?</div>
     <label for="hours_per_week">Выберите количество часов</label>
     <select id="hours_per_week" name="hours_per_week" required>
       <option value="">— Выберите —</option>
