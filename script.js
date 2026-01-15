@@ -326,6 +326,48 @@ function normalizePhone(p) {
   return String(p || "").trim().replace(/[^\d+]/g, "");
 }
 
+// Phone validation: RU by default, allow any format if user checked "Номер не РФ"
+function normalizeRuPhoneToE164(raw) {
+  // Приводим к +7XXXXXXXXXX
+  const s = String(raw || "").trim().replace(/[^\d+]/g, "");
+  const digits = s.replace(/[^\d]/g, "");
+
+  // +7XXXXXXXXXX / 7XXXXXXXXXX
+  if (digits.length === 11 && digits[0] === "7") return "+7" + digits.slice(1);
+  // 8XXXXXXXXXX
+  if (digits.length === 11 && digits[0] === "8") return "+7" + digits.slice(1);
+  // 10 digits without country code
+  if (digits.length === 10) return "+7" + digits;
+
+  return "";
+}
+
+function validatePhone(raw, isNonRu) {
+  const v = String(raw || "").trim();
+  if (!v) {
+    return { ok: false, value: "", error: "Пожалуйста, укажите номер телефона." };
+  }
+
+  if (isNonRu) {
+    // Any format (minimal sanity check)
+    if (v.length < 5) {
+      return { ok: false, value: "", error: "Пожалуйста, укажите корректный номер телефона." };
+    }
+    return { ok: true, value: v, error: "" };
+  }
+
+  const norm = normalizeRuPhoneToE164(v);
+  if (!norm) {
+    return {
+      ok: false,
+      value: "",
+      error: "Введите номер РФ в формате +7XXXXXXXXXX или 8XXXXXXXXXX.",
+    };
+  }
+
+  return { ok: true, value: norm, error: "" };
+}
+
 function resetSelect(select, placeholder = "— Выберите —") {
   if (!select) return;
   select.innerHTML = "";
@@ -461,6 +503,9 @@ document.addEventListener("DOMContentLoaded", () => {
   const resultEl = document.getElementById("result");
   const errorEl = document.getElementById("error");
   const emailErrorEl = document.getElementById("email-error");
+
+  const phoneEl = document.getElementById("phone");
+  const phoneNonRuEl = document.getElementById("phone-nonru");
 
   const city = document.getElementById("city");
   const cityOtherBlock = document.getElementById("city_other_block");
@@ -684,9 +729,14 @@ document.addEventListener("DOMContentLoaded", () => {
       emailErrorEl.textContent = "Пожалуйста, укажите корректный e-mail.";
       return;
     }
-    if (!data.phone) {
-      errorEl.textContent = "Пожалуйста, укажите номер телефона.";
-      return;
+    {
+      const isNonRuPhone = !!phoneNonRuEl?.checked;
+      const phoneCheck = validatePhone(data.phone, isNonRuPhone);
+      if (!phoneCheck.ok) {
+        errorEl.textContent = phoneCheck.error;
+        return;
+      }
+      data.phone = phoneCheck.value;
     }
     if (!data.birth_date) {
       errorEl.textContent = "Пожалуйста, выберите дату рождения.";
