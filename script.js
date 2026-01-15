@@ -734,13 +734,26 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // platform meta
-    data.platform = APP_CONTEXT.platform;
-    if (APP_CONTEXT.platform === "telegram" && APP_CONTEXT.tg) {
-      data.tg_init_data = APP_CONTEXT.tg.initData || "";
-    }
-    if (APP_CONTEXT.platform === "vk") {
-      data.vk_launch_params = APP_CONTEXT.vk?.launchParamsRaw || "";
-    }
+   data.platform = APP_CONTEXT.platform;
+
+   if (APP_CONTEXT.platform === "telegram" && APP_CONTEXT.tg) {
+     data.tg_init_data = APP_CONTEXT.tg.initData || "";
+   }
+
+   // VK: пробрасываем "tg-id" как "<vkUserId>_VK"
+   if (APP_CONTEXT.platform === "vk") {
+     data.vk_launch_params = APP_CONTEXT.vk?.launchParamsRaw || "";
+
+     const vkId = APP_CONTEXT.vk?.user?.id ? String(APP_CONTEXT.vk.user.id) : "";
+     if (vkId) {
+    // На всякий случай кладём в оба варианта ключа:
+    // 1) tg-id (как у тебя в Noco, судя по названию столбца)
+       data["tg-id"] = `${vkId}_VK`;
+    // 2) tg_id (если бэк ожидает snake_case)
+       data.tg_id = `${vkId}_VK`;
+   }
+}
+
 
     try {
       const res = await fetch(FUNCTION_URL, {
