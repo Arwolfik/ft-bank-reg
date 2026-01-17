@@ -273,13 +273,17 @@ button:active {
 }
 
 .policy-text {
-  margin-bottom: 20px;
-  padding: 10px;
-  background: #fff;
-  border-radius: 6px;
+  margin-top: 8px;     /* было большое расстояние — уменьшаем */
   font-size: 14px;
   line-height: 1.4;
+  opacity: 0.85;
 }
+
+.policy-text a {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
 
 /* =========================
    Responsive
