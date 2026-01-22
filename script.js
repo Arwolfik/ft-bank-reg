@@ -530,8 +530,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const gradYear = document.getElementById("graduation_year");
 
   const specialty = document.getElementById("specialty");
-  const specialtyOtherBlock = document.getElementById("specialty_other_block");
-  const specialtyOther = document.getElementById("specialty_other");
 
   const direction = document.getElementById("internship_direction");
 
@@ -605,17 +603,6 @@ document.addEventListener("DOMContentLoaded", () => {
   if (degree) {
     degree.addEventListener("change", updateDegreeBlocks);
     updateDegreeBlocks();
-  }
-
-  // Specialty other
-  function updateSpecialtyBlocks() {
-    const isOther = (specialty?.value || "") === "Другое";
-    setBlockVisible(specialtyOtherBlock, isOther);
-    if (!isOther && specialtyOther) specialtyOther.value = "";
-  }
-  if (specialty) {
-    specialty.addEventListener("change", updateSpecialtyBlocks);
-    updateSpecialtyBlocks();
   }
 
   // Online courses logic
@@ -772,10 +759,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
     if (!data.specialty) {
       errorEl.textContent = "Пожалуйста, выберите специальность.";
-      return;
-    }
-    if (data.specialty === "Другое" && !data.specialty_other) {
-      errorEl.textContent = "Пожалуйста, укажите специальность.";
       return;
     }
     if (!data.internship_direction) {
