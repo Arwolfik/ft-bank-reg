@@ -4,7 +4,7 @@
 //const FUNCTION_URL = "https://functions.yandexcloud.net/d4e1po7m6l0nno0u1c5h";
 
 //GS DB
-const FUNCTION_URL = "https://functions.yandexcloud.net/d4eb11mpohc2c0sg6fba";
+const FUNCTION_URL = "https://functions.yandexcloud.net/d4e87dtimfgcjgmn3n6q";
 
 /* =========================================================
    Platform context: Telegram / VK
@@ -476,6 +476,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const phoneEl = document.getElementById("phone");
   const phoneNonRuEl = document.getElementById("phone-nonru");
+  const citizenship = document.getElementById("citizenship");
+
 
   const city = document.getElementById("city");
   const cityOtherBlock = document.getElementById("city_other_block");
@@ -569,7 +571,10 @@ document.addEventListener("DOMContentLoaded", () => {
     const showYear = provider && provider !== "Не проходил(а)";
     setBlockVisible(onlineCourseYearBlock, showYear);
 
-    if (!showYear) {
+    
+
+    if (onlineCourseYear) onlineCourseYear.required = !!showYear;
+if (!showYear) {
       if (onlineCourseYear) onlineCourseYear.value = "";
       if (onlineCourseYearOther) onlineCourseYearOther.value = "";
       setBlockVisible(onlineCourseYearOtherBlock, false);
@@ -699,6 +704,10 @@ document.addEventListener("DOMContentLoaded", () => {
       errorEl.textContent = "Пожалуйста, выберите дату рождения.";
       return;
     }
+    if (!data.citizenship) {
+      errorEl.textContent = "Пожалуйста, выберите гражданство.";
+      return;
+    }
     if (!data.city) {
       errorEl.textContent = "Пожалуйста, выберите город проживания.";
       return;
@@ -723,6 +732,15 @@ document.addEventListener("DOMContentLoaded", () => {
       errorEl.textContent = "Пожалуйста, выберите направление стажировки.";
       return;
     }
+    // online course year required only if a course provider is selected
+    if (data.internship_direction === "IT") {
+      const provider = (data.online_courses || "").trim();
+      if (provider && provider !== "Не проходил(а)" && !data.online_course_year) {
+        errorEl.textContent = "Пожалуйста, выберите год окончания курса.";
+        return;
+      }
+    }
+
     if (!data.priority1 || !data.priority2) {
       errorEl.textContent = "Пожалуйста, выберите два приоритета.";
       return;
