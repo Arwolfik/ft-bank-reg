@@ -4,7 +4,7 @@
 //const FUNCTION_URL = "https://functions.yandexcloud.net/d4e1po7m6l0nno0u1c5h";
 
 //GS DB
-const FUNCTION_URL = "https://functions.yandexcloud.net/d4e87dtimfgcjgmn3n6q";
+const FUNCTION_URL = "https://functions.yandexcloud.net/d4eb11mpohc2c0sg6fba";
 
 /* =========================================================
    Platform context: Telegram / VK
