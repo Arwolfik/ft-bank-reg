@@ -724,7 +724,7 @@ if (!showYear) {
       errorEl.textContent = "Пожалуйста, выберите год выпуска.";
       return;
     }
-    if (!data.specialty) {
+    if (data.education_degree !== "Нет высшего образования" && !data.specialty) {
       errorEl.textContent = "Пожалуйста, выберите специальность.";
       return;
     }
