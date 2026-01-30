@@ -147,7 +147,7 @@ const IT_TRACK_GROUPS = [
       }
     ]
   }
-  }
+  },
 ];
 const NONIT_TRACK_GROUPS = [
   {
