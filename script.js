@@ -5,6 +5,7 @@
 
 //GS DB
 const FUNCTION_URL = "https://functions.yandexcloud.net/d4eb11mpohc2c0sg6fba";
+//const FUNCTION_URL = "https://functions.yandexcloud.net/d4e87dtimfgcjgmn3n6q";
 
 /* =========================================================
    Platform context: Telegram / VK
@@ -92,7 +93,8 @@ function captureFormState(formEl) {
     if (el.type === "checkbox") state[el.name] = !!el.checked;
     else if (el.type === "radio") {
       if (el.checked) state[el.name] = el.value;
-    } else {
+    } 
+    else {
       state[el.name] = el.value;
     }
   });
@@ -109,6 +111,7 @@ function applyFormState(formEl, state) {
 
     if (el.type === "checkbox") el.checked = !!state[el.name];
     else if (el.type === "radio") el.checked = String(state[el.name]) === String(el.value);
+    else if (el.type === "file") {}
     else el.value = state[el.name];
   });
 
@@ -458,6 +461,8 @@ document.addEventListener("DOMContentLoaded", () => {
   const policyLink = document.getElementById("policy-link");
   const policyText = document.getElementById("policy-text");
 
+  
+
   if (!form) return;
 
   function clearMessages() {
@@ -595,171 +600,163 @@ if (!showYear) {
   }
 
   // Submit
-  form.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    clearMessages();
+form.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  clearMessages();
 
-    const data = {};
-    const fd = new FormData(form);
-    for (const [k, v] of fd.entries()) {
-      data[k] = String(v || "").trim();
-    }
+  const fd = new FormData(form);
+  const data = {};
+  for (const [k, v] of fd.entries()) {
+    if (v instanceof File) continue;
+    data[k] = String(v || "").trim();
+  }
 
-    // city normalization
-    if (data.city !== "Другой") {
-      data.city_other = "";
-      data.timezone_diff = "";
-    }
+  if (data.city !== "Другой") {
+    data.city_other = "";
+    data.timezone_diff = "";
+  }
 
-    // education
-    if (data.education_degree === "Нет высшего образования") {
-      data.graduation_year = "";
-    }
+  if (data.education_degree === "Нет высшего образования") {
+    data.graduation_year = "";
+  }
 
-    // specialty
-    if (data.specialty !== "Другое") {
-      data.specialty_other = "";
-    }
+  if (data.specialty !== "Другое") {
+    data.specialty_other = "";
+  }
 
-    // direction normalization for backend: IT / Non-IT
-    if (data.internship_direction === "ИТ") data.internship_direction = "ИТ";
-    if (data.internship_direction === "Бизнес") data.internship_direction = "Бизнес";
+  if (data.internship_direction === "ИТ") data.internship_direction = "ИТ";
+  if (data.internship_direction === "Бизнес") data.internship_direction = "Бизнес";
 
-    // online courses
-    if (data.internship_direction !== "IT") {
-      data.online_courses = "";
+  if (data.internship_direction !== "IT") {
+    data.online_courses = "";
+    data.online_course_year = "";
+    data.online_course_year_other = "";
+  } else {
+    if (!data.online_courses || data.online_courses === "Не проходил(а)") {
       data.online_course_year = "";
       data.online_course_year_other = "";
     } else {
-      if (!data.online_courses || data.online_courses === "Не проходил(а)") {
-        data.online_course_year = "";
+      if (data.online_course_year !== "Другой") {
         data.online_course_year_other = "";
-      } else {
-        if (data.online_course_year !== "Другой") {
-          data.online_course_year_other = "";
-        }
       }
     }
+  }
 
-    // validate
-    if (!data.last_name || !data.first_name) {
-      errorEl.textContent = "Пожалуйста, заполните имя и фамилию.";
+  if (!data.last_name || !data.first_name) {
+    errorEl.textContent = "Пожалуйста, заполните имя и фамилию.";
+    return;
+  }
+
+  if (!data.email || !isValidEmail(data.email)) {
+    emailErrorEl.style.display = "block";
+    emailErrorEl.textContent = "Пожалуйста, укажите корректный e-mail.";
+    return;
+  }
+
+  {
+    const isNonRuPhone = !!phoneNonRuEl?.checked;
+    const phoneCheck = validatePhone(data.phone, isNonRuPhone);
+    if (!phoneCheck.ok) {
+      errorEl.textContent = phoneCheck.error;
       return;
     }
-    if (!data.email || !isValidEmail(data.email)) {
-      emailErrorEl.style.display = "block";
-      emailErrorEl.textContent = "Пожалуйста, укажите корректный e-mail.";
+    data.phone = phoneCheck.value;
+  }
+
+  if (!data.birth_date) {
+    errorEl.textContent = "Пожалуйста, выберите дату рождения.";
+    return;
+  }
+  if (!data.citizenship) {
+    errorEl.textContent = "Пожалуйста, выберите гражданство.";
+    return;
+  }
+  if (!data.city) {
+    errorEl.textContent = "Пожалуйста, выберите город проживания.";
+    return;
+  }
+  if (data.city === "Другой" && !data.timezone_diff) {
+    errorEl.textContent = "Пожалуйста, выберите разницу во времени относительно Мск.";
+    return;
+  }
+  if (!data.education_degree) {
+    errorEl.textContent = "Пожалуйста, выберите степень образования.";
+    return;
+  }
+  if (data.education_degree !== "Нет высшего образования" && !data.graduation_year) {
+    errorEl.textContent = "Пожалуйста, выберите год выпуска.";
+    return;
+  }
+  if (data.education_degree !== "Нет высшего образования" && !data.specialty) {
+    errorEl.textContent = "Пожалуйста, выберите специальность.";
+    return;
+  }
+  if (!data.internship_direction) {
+    errorEl.textContent = "Пожалуйста, выберите направление стажировки.";
+    return;
+  }
+
+  if (data.internship_direction === "IT") {
+    const provider = (data.online_courses || "").trim();
+    if (provider && provider !== "Не проходил(а)" && !data.online_course_year) {
+      errorEl.textContent = "Пожалуйста, выберите год окончания курса.";
       return;
     }
-    {
-      const isNonRuPhone = !!phoneNonRuEl?.checked;
-      const phoneCheck = validatePhone(data.phone, isNonRuPhone);
-      if (!phoneCheck.ok) {
-        errorEl.textContent = phoneCheck.error;
-        return;
-      }
-      data.phone = phoneCheck.value;
+  }
+
+  if (!data.priority1 || !data.priority2) {
+    errorEl.textContent = "Пожалуйста, выберите два приоритета.";
+    return;
+  }
+  if (!data.hours_per_week) {
+    errorEl.textContent = "Пожалуйста, выберите количество часов.";
+    return;
+  }
+  if (!data.ready_6_months) {
+    errorEl.textContent = "Пожалуйста, выберите готовность на 6 месяцев.";
+    return;
+  }
+
+  Object.entries(data).forEach(([k, v]) => fd.set(k, v));
+
+  fd.set("platform", APP_CONTEXT.platform);
+
+  if (APP_CONTEXT.platform === "telegram" && APP_CONTEXT.tg?.initData) {
+    fd.set("tg_init_data", APP_CONTEXT.tg.initData);
+  }
+
+  if (APP_CONTEXT.platform === "vk") {
+    fd.set("vk_launch_params", APP_CONTEXT.vk?.launchParamsRaw || "");
+    const vkId = APP_CONTEXT.vk?.user?.id ? String(APP_CONTEXT.vk.user.id) : "";
+    if (vkId) {
+      fd.set("tg-id", `${vkId}_VK`);
+      fd.set("tg_id", `${vkId}_VK`);
     }
-    if (!data.birth_date) {
-      errorEl.textContent = "Пожалуйста, выберите дату рождения.";
+  }
+
+  try {
+    const res = await fetch(FUNCTION_URL, {
+      method: "POST",
+      body: fd,
+    });
+
+    const js = await res.json().catch(() => null);
+
+    if (!res.ok) {
+      errorEl.textContent = js?.error || `Ошибка отправки (HTTP ${res.status})`;
       return;
-    }
-    if (!data.citizenship) {
-      errorEl.textContent = "Пожалуйста, выберите гражданство.";
-      return;
-    }
-    if (!data.city) {
-      errorEl.textContent = "Пожалуйста, выберите город проживания.";
-      return;
-    }
-    if (data.city === "Другой" && !data.timezone_diff) {
-      errorEl.textContent = "Пожалуйста, выберите разницу во времени относительно Мск.";
-      return;
-    }
-    if (!data.education_degree) {
-      errorEl.textContent = "Пожалуйста, выберите степень образования.";
-      return;
-    }
-    if (data.education_degree !== "Нет высшего образования" && !data.graduation_year) {
-      errorEl.textContent = "Пожалуйста, выберите год выпуска.";
-      return;
-    }
-    if (data.education_degree !== "Нет высшего образования" && !data.specialty) {
-      errorEl.textContent = "Пожалуйста, выберите специальность.";
-      return;
-    }
-    if (!data.internship_direction) {
-      errorEl.textContent = "Пожалуйста, выберите направление стажировки.";
-      return;
-    }
-    // online course year required only if a course provider is selected
-    if (data.internship_direction === "IT") {
-      const provider = (data.online_courses || "").trim();
-      if (provider && provider !== "Не проходил(а)" && !data.online_course_year) {
-        errorEl.textContent = "Пожалуйста, выберите год окончания курса.";
-        return;
-      }
     }
 
-    if (!data.priority1 || !data.priority2) {
-      errorEl.textContent = "Пожалуйста, выберите два приоритета.";
-      return;
-    }
-    if (!data.hours_per_week) {
-      errorEl.textContent = "Пожалуйста, выберите количество часов.";
-      return;
-    }
-    if (!data.ready_6_months) {
-      errorEl.textContent = "Пожалуйста, выберите готовность на 6 месяцев.";
-      return;
-    }
-
-    // platform meta
-   data.platform = APP_CONTEXT.platform;
-
-   if (APP_CONTEXT.platform === "telegram" && APP_CONTEXT.tg) {
-     data.tg_init_data = APP_CONTEXT.tg.initData || "";
-   }
-
-   // VK: пробрасываем "tg-id" как "<vkUserId>_VK"
-   if (APP_CONTEXT.platform === "vk") {
-     data.vk_launch_params = APP_CONTEXT.vk?.launchParamsRaw || "";
-
-     const vkId = APP_CONTEXT.vk?.user?.id ? String(APP_CONTEXT.vk.user.id) : "";
-     if (vkId) {
-    // На всякий случай кладём в оба варианта ключа:
-    // 1) tg-id (как у тебя в Noco, судя по названию столбца)
-       data["tg-id"] = `${vkId}_VK`;
-    // 2) tg_id (если бэк ожидает snake_case)
-       data.tg_id = `${vkId}_VK`;
-   }
-}
-
-
-    try {
-      const res = await fetch(FUNCTION_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-      });
-
-      const js = await res.json().catch(() => null);
-
-      if (!res.ok) {
-        errorEl.textContent = js?.error || `Ошибка отправки (HTTP ${res.status})`;
-        return;
-      }
-
-      if (js && js.duplicate) {
-        resultEl.textContent = js.message || "Мы уже нашли вашу заявку ✅";
-        clearState();
-        return;
-      }
-
-      resultEl.textContent = "Данные отправлены ✅";
+    if (js && js.duplicate) {
+      resultEl.textContent = js.message || "Мы уже нашли вашу заявку ✅";
       clearState();
-    } catch (err) {
-      errorEl.textContent = "Ошибка отправки: " + (err?.message || String(err));
+      return;
     }
-  });
+
+    resultEl.textContent = "Данные отправлены ✅";
+    clearState();
+  } catch (err) {
+    errorEl.textContent = "Ошибка отправки: " + (err?.message || String(err));
+  }
+});
 });
