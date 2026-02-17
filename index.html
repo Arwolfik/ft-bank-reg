@@ -97,6 +97,22 @@
 <body>
   <h2>Анкета регистрации</h2>
 
+  <div id="closed-block" style="display:none;">
+    <div class="closed-message">
+      <h3>Прием заявок завершен</h3>
+      <p>
+        Спасибо, что откликнулись на стажировку в банке и рассматриваете нас в качестве будущего работодателя.
+      </p>
+      <p>
+        Будем рады видеть вас среди участников следующей волны!
+      </p>
+      <p>
+        Оставайтесь с нами и следите за обновлениями.
+      </p>
+    </div>
+  </div>
+
+
   <form id="reg-form" novalidate>
     <label for="last_name">Фамилия</label>
     <input id="last_name" name="last_name" type="text" autocomplete="family-name" required />
@@ -296,6 +312,14 @@
     <p id="error" class="error"></p>
   </form>
 
-  <script src="./script.js"></script>
+  <script>
+    const isClosed = true;
+  
+    if (isClosed) {
+      document.getElementById('reg-form').style.display = 'none';
+      document.getElementById('closed-block').style.display = 'block';
+    }
+  </script>
+
 </body>
 </html>
